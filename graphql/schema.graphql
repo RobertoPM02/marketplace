@@ -52,3 +52,27 @@ type Mutation {
   : User @create
 
 }
+
+scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
+
+type Product {
+    id: ID!
+    name: String!
+    price: Float!
+    image_path: String
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+extend type Query {
+    products: [Product!]! @all
+    product(id: ID @eq): Product @find
+}
+
+extend type Mutation {
+    createProduct(
+        name: String! @rules(apply: ["required", "min:3"]),
+        price: Float! @rules(apply: ["required", "numeric", "min:0"]),
+        image: Upload @rules(apply: ["image", "max:2048"])
+    ): Product! @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+}
