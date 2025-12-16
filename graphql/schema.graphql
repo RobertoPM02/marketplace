@@ -30,6 +30,10 @@ type User {
     "Unique email address."
     email: String!
 
+    number: String! @rename(attribute: "phone_number")
+
+    ##password: String!
+
     "When the email was verified."
     email_verified_at: DateTime
 
@@ -38,4 +42,13 @@ type User {
 
     "When the account was last updated."
     updated_at: DateTime!
+}
+
+type Mutation {
+  createUser(name: String!, 
+  email: String! @rules(apply: ["email", "unique:users,email"]), 
+  number: String! @rename(attribute: "phone_number") @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
+  password: String! @hash @rules(apply: ["required", "min:8"]))
+  : User @create
+
 }
