@@ -42,13 +42,21 @@ type User {
 
     "When the account was last updated."
     updated_at: DateTime!
+
+    role: Role @belongsTo
+}
+
+type Role {
+    id: ID!
+    name: String!
 }
 
 type Mutation {
   createUser(name: String!, 
   email: String! @rules(apply: ["email", "unique:users,email"]), 
   number: String! @rename(attribute: "phone_number") @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
-  password: String! @hash @rules(apply: ["required", "min:8"]))
+  password: String! @hash @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
+  role_id: ID! @rules(apply: ["exists:roles,id"]))
   : User @create
 
 }
