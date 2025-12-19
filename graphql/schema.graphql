@@ -1,4 +1,4 @@
-"A datetime string with format `Y-m-d H:i:s`."
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
 scalar DateTime
   @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
@@ -11,6 +11,9 @@ type Query {
   users(
     name: String @where(operator: "like")
   ): [User!]! @paginate(defaultCount: 10)
+
+  products: [Product!]! @all
+  product(id: ID @eq): Product @find
 }
 
 type User {
@@ -21,6 +24,12 @@ type User {
   email_verified_at: DateTime
   created_at: DateTime!
   updated_at: DateTime!
+  role: Role @belongsTo
+}
+
+type Role {
+  id: ID!
+  name: String!
 }
 
 type AuthPayload {
@@ -30,27 +39,50 @@ type AuthPayload {
 }
 
 type Mutation {
-
-   login(
-    login: String!
-      @rules(
-        apply: ["required"]
-        messages: {
-          required: "El correo o nombre de usuario es obligatorio"
-        }
-      )
-
+  # REGISTRO (NO TOCADO)
+  createUser(
+    name: String!
+    email: String!
+      @rules(apply: ["email", "unique:users,email"])
+    number: String!
+      @rename(attribute: "phone_number")
+      @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
     password: String!
-      @rules(
-        apply: ["required", "min:8"]
-        messages: {
-          required: "La contraseña es obligatoria"
-          min: "La contraseña debe tener al menos 8 caracteres"
-        }
-      )
+      @hash
+      @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
+    role_id: ID!
+      @rules(apply: ["exists:roles,id"])
+  ): User @create
+
+  # AUTH
+  login(
+    login: String!
+      @rules(apply: ["required"])
+    password: String!
+      @rules(apply: ["required", "min:8"])
   ): AuthPayload
     @field(resolver: "App\\GraphQL\\Mutations\\Login")
 
   logout: Boolean!
     @field(resolver: "App\\GraphQL\\Mutations\\Logout")
+
+  # PRODUCTOS
+  createProduct(
+    name: String! @rules(apply: ["required", "min:3"])
+    price: Float! @rules(apply: ["required", "numeric", "min:0"])
+    image: Upload @rules(apply: ["image", "max:2048"])
+  ): Product!
+    @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+}
+
+scalar Upload
+  @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
+
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+  image_path: String
+  created_at: DateTime!
+  updated_at: DateTime!
 }
