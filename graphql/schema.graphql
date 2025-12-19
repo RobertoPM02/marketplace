@@ -1,54 +1,56 @@
-"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
-scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+"A datetime string with format `Y-m-d H:i:s`."
+scalar DateTime
+  @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
-"Indicates what fields are available at the top level of a query operation."
 type Query {
-    "Find a single user by an identifying attribute."
-    user(
-      "Search by primary key."
-      id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+  user(
+    id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+    email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
+  ): User @find
 
-      "Search by email address."
-      email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
-    ): User @find
-
-    "List multiple users."
-    users(
-      "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
-      name: String @where(operator: "like")
-    ): [User!]! @paginate(defaultCount: 10)
+  users(
+    name: String @where(operator: "like")
+  ): [User!]! @paginate(defaultCount: 10)
 }
 
-"Account of a person who uses this application."
 type User {
-    "Unique primary key."
-    id: ID!
+  id: ID!
+  name: String!
+  email: String!
+  number: String! @rename(attribute: "phone_number")
+  email_verified_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+}
 
-    "Non-unique name."
-    name: String!
-
-    "Unique email address."
-    email: String!
-
-    number: String! @rename(attribute: "phone_number")
-
-    ##password: String!
-
-    "When the email was verified."
-    email_verified_at: DateTime
-
-    "When the account was created."
-    created_at: DateTime!
-
-    "When the account was last updated."
-    updated_at: DateTime!
+type AuthPayload {
+  access_token: String!
+  token_type: String!
+  user: User!
 }
 
 type Mutation {
-  createUser(name: String!, 
-  email: String! @rules(apply: ["email", "unique:users,email"]), 
-  number: String! @rename(attribute: "phone_number") @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
-  password: String! @hash @rules(apply: ["required", "min:8"]))
-  : User @create
 
+   login(
+    login: String!
+      @rules(
+        apply: ["required"]
+        messages: {
+          required: "El correo o nombre de usuario es obligatorio"
+        }
+      )
+
+    password: String!
+      @rules(
+        apply: ["required", "min:8"]
+        messages: {
+          required: "La contraseña es obligatoria"
+          min: "La contraseña debe tener al menos 8 caracteres"
+        }
+      )
+  ): AuthPayload
+    @field(resolver: "App\\GraphQL\\Mutations\\Login")
+
+  logout: Boolean!
+    @field(resolver: "App\\GraphQL\\Mutations\\Logout")
 }
