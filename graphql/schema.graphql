@@ -12,6 +12,10 @@ type Query {
     name: String @where(operator: "like")
   ): [User!]! @paginate(defaultCount: 10)
 
+  viewProductsById( # Ver detalles del producto
+    id: ID @eq @rules(apply: ["required"])
+  ): Product @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
+
   products: [Product!]! @all
   product(id: ID @eq): Product @find
 }
