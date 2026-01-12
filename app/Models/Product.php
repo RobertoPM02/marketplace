@@ -13,5 +13,6 @@ class Product extends Model
         'name',
         'price',
         'image_path',
+        'user_id'
     ];
 }
