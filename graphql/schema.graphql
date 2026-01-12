@@ -77,6 +77,7 @@ type Mutation {
     image: Upload @rules(apply: ["image", "max:2048"])
   ): Product!
     @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+    @guard(with: ["sanctum"])
 }
 
 scalar Upload
@@ -89,6 +90,7 @@ type Product {
   image_path: String
   created_at: DateTime!
   updated_at: DateTime!
+  user_id: ID
 
   user: User @belongsTo
 }
