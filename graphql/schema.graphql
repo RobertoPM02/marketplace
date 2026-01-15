@@ -1,6 +1,7 @@
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
-scalar DateTime
-  @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
 
 scalar Upload
   @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
@@ -135,4 +136,44 @@ type CartItem {
   id: ID!
   product: Product!
   quantity: Int!
+}
+
+type CartItem {
+    id: ID!
+    quantity: Int!
+    product: Product! @belongsTo
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Mutation {
+ 
+  createUser(
+    name: String!
+    email: String! @rules(apply: ["email", "unique:users,email"])
+    number: String! @rename(attribute: "phone_number") @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
+    password: String! @hash @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
+    role_id: ID! @rules(apply: ["exists:roles,id"])
+  ): User @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
+
+  
+  login(
+    login: String! @rules(apply: ["required"])
+    password: String! @rules(apply: ["required", "min:8"])
+  ): AuthPayload @field(resolver: "App\\GraphQL\\Mutations\\Login")
+
+  logout: Boolean! @field(resolver: "App\\GraphQL\\Mutations\\Logout")
+
+  
+  createProduct(
+    name: String! @rules(apply: ["required", "min:3"])
+    price: Float! @rules(apply: ["required", "numeric", "min:0"])
+    image: Upload @rules(apply: ["image", "max:2048"])
+  ): Product! @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+
+  
+  addToCart(
+      product_id: ID! @rules(apply: ["required", "exists:products,id"]),
+      quantity: Int! @rules(apply: ["required", "integer", "min:1"])
+  ): CartItem! @field(resolver: "App\\GraphQL\\Mutations\\AddToCart")
 }
