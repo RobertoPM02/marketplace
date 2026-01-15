@@ -3,6 +3,9 @@ scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date
 
 scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
 
+scalar Upload
+  @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
+
 type Query {
   user(
     id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
@@ -13,8 +16,78 @@ type Query {
     name: String @where(operator: "like")
   ): [User!]! @paginate(defaultCount: 10)
 
-  products: [Product!]! @all
+  viewProductsById(
+    id: ID @eq @rules(apply: ["required"])
+  ): Product
+    @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
+
   product(id: ID @eq): Product @find
+
+  products: [Product!]! @all
+
+  myCart: Cart
+    @field(resolver: "App\\GraphQL\\Queries\\MyCart")
+    #@auth
+}
+
+type Mutation {
+  # REGISTRO
+  createUser(
+    name: String!
+    email: String!
+      @rules(apply: ["email", "unique:users,email"])
+    number: String!
+      @rename(attribute: "phone_number")
+      @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
+    password: String!
+      @hash
+      @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
+    role_id: ID!
+      @rules(apply: ["exists:roles,id"])
+  ): User
+    @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
+
+  # AUTH
+  login(
+    login: String!
+      @rules(apply: ["required"])
+    password: String!
+      @rules(apply: ["required", "min:8"])
+  ): AuthPayload
+    @field(resolver: "App\\GraphQL\\Mutations\\Login")
+
+  logout: Boolean!
+    @field(resolver: "App\\GraphQL\\Mutations\\Logout")
+
+  # PRODUCTOS
+  createProduct(
+    name: String! @rules(apply: ["required", "min:3"])
+    price: Float! @rules(apply: ["required", "numeric", "min:0"])
+    image: Upload @rules(apply: ["image", "max:2048"])
+  ): Product!
+    @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+    @guard(with: ["sanctum"])
+
+  # CARRITO
+  addToCart(
+    product_id: ID!
+    quantity: Int = 1
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\AddToCart")
+    @auth
+
+  updateCartItem(
+    cart_item_id: ID!
+    quantity: Int!
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\UpdateCartItem")
+    @auth
+
+  removeFromCart(
+    cart_item_id: ID!
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\RemoveFromCart")
+    @auth
 }
 
 type User {
@@ -46,6 +119,23 @@ type Product {
   image_path: String
   created_at: DateTime!
   updated_at: DateTime!
+  user_id: ID
+  user: User @belongsTo
+}
+
+type Cart {
+  id: ID!
+  items: [CartItem!]!
+  subtotal: Float!
+  shipping: Float!
+  taxes: Float!
+  total: Float!
+}
+
+type CartItem {
+  id: ID!
+  product: Product!
+  quantity: Int!
 }
 
 type CartItem {

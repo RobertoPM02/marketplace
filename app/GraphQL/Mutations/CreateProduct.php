@@ -4,6 +4,7 @@ namespace App\GraphQL\Mutations;
 
 use App\Models\Product;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 
 final readonly class CreateProduct
 {
@@ -24,6 +25,7 @@ final readonly class CreateProduct
             'name' => $args['name'],
             'price' => $args['price'],
             'image_path' => $imagePath,
+            'user_id' => Auth::user()->id,
         ]);
     }
 }
