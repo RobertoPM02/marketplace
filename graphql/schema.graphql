@@ -116,7 +116,7 @@ type Product {
   id: ID!
   name: String!
   price: Float!
-  image_path: String
+  image: String @rename(attribute: "image_url")
   created_at: DateTime!
   updated_at: DateTime!
   user_id: ID
