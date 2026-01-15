@@ -27,7 +27,8 @@ type Query {
 
   myCart: Cart
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
-    #@auth
+    @guard(with: ["sanctum"])
+
 }
 
 type Mutation {
