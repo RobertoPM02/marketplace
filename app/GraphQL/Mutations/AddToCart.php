@@ -2,33 +2,41 @@
 
 namespace App\GraphQL\Mutations;
 
+use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 
-final class AddToCart
+class AddToCart
 {
     public function __invoke($_, array $args)
     {
-        
-        $userId = Auth::id() ?? 1; 
+        $user = Auth::user();
 
-        $cartItem = CartItem::where('user_id', $userId)
-            ->where('product_id', $args['product_id'])
+        // obtener o crear carrito activo
+        $cart = Cart::firstOrCreate([
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        //  Validar producto
+        $product = Product::findOrFail($args['product_id']);
+
+        //  Crear o actualizar item
+        $item = CartItem::where('cart_id', $cart->id)
+            ->where('product_id', $product->id)
             ->first();
 
-        if ($cartItem) {
-            // Si ya existe, actualizamos la cantidad
-            $cartItem->quantity += $args['quantity'];
-            $cartItem->save();
+        if ($item) {
+            $item->increment('quantity', $args['quantity']);
         } else {
-            // Si no existe, lo creamos
-            $cartItem = CartItem::create([
-                'user_id' => $userId,
-                'product_id' => $args['product_id'],
-                'quantity' => $args['quantity']
+            CartItem::create([
+                'cart_id' => $cart->id,
+                'product_id' => $product->id,
+                'quantity' => $args['quantity'],
             ]);
         }
 
-        return $cartItem;
+        return $cart->load('items.product');
     }
 }

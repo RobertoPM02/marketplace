@@ -29,7 +29,7 @@ class Cart extends Model
 
     public function getTaxesAttribute()
     {
-        return $this->subtotal * 0.016;
+        return $this->subtotal * 0.16;
     }
 
     public function getTotalAttribute()
