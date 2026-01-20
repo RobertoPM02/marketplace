@@ -15,16 +15,33 @@ class UpdateCartItem
             ->whereHas('cart', fn ($q) =>
                 $q->where('user_id', $user->id)
             )
+            ->with('product')
             ->firstOrFail();
 
-        if ($args['quantity'] <= 0) {
+        $quantity = $args['quantity'];
+
+        // Si cantidad <= 0 → eliminar item
+        if ($quantity <= 0) {
             $cartItem->delete();
-        } else {
-            $cartItem->update([
-                'quantity' => $args['quantity']
-            ]);
+            return $cartItem->cart->fresh()->load('items.product');
         }
 
-        return $cartItem->cart->fresh();
+        // Límite máximo por producto
+        if ($quantity > 10) {
+            throw new \Exception('Máximo 10 unidades por producto');
+        }
+
+        // Validar stock
+        if ($quantity > $cartItem->product->stock) {
+            throw new \Exception('Stock insuficiente');
+        }
+
+        // Actualizar cantidad
+        $cartItem->update([
+            'quantity' => $quantity
+        ]);
+
+        return $cartItem->cart->fresh()->load('items.product');
     }
 }
+

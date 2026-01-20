@@ -16,7 +16,6 @@ final readonly class CreateProduct
     {
         $imagePath = null;
 
-        
         if (isset($args['image']) && $args['image'] instanceof UploadedFile) {
             $imagePath = $args['image']->store('products', 'public');
         }
@@ -24,6 +23,7 @@ final readonly class CreateProduct
         return Product::create([
             'name' => $args['name'],
             'price' => $args['price'],
+            'stock' => $args['stock'], 
             'image_path' => $imagePath,
             'user_id' => Auth::user()->id,
         ]);
