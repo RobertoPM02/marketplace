@@ -16,8 +16,8 @@ type Query {
     id: ID @eq @rules(apply: ["required"])
   ): Product @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
 
-  product(id: ID @eq): Product @find
   products: [Product!]! @hasMany
+  allProducts: [Product!]! @paginate(defaultCount: 10)
 }
 
 type User {
