@@ -20,9 +20,12 @@ type Query {
   ): Product
     @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
 
+
   product(id: ID @eq): Product @find
 
   products: [Product!]! @all
+
+  allProducts: [Product!]! @paginate(defaultCount: 10)
 
   myCart: Cart
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
