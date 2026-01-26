@@ -27,6 +27,10 @@ type Query {
 
   allProducts: [Product!]! @paginate(defaultCount: 10)
 
+  myProducts: [Product!]!
+    @field(resolver: "App\\GraphQL\\Queries\\MyProducts")
+    @guard(with: ["sanctum"])
+
   myCart: Cart
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
     @guard(with: ["sanctum"])
