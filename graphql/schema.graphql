@@ -71,6 +71,13 @@ type Mutation {
   ): Product!
     @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
     @guard(with: ["sanctum"])
+    
+  deleteProduct(
+    id: ID!
+  ): Product
+    @field(resolver: "App\\GraphQL\\Mutations\\DeleteProduct")
+    @guard(with: ["sanctum"])
+
 
   # CARRITO
   addToCart(
