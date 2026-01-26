@@ -92,6 +92,14 @@ type Mutation {
   ): Cart
     @field(resolver: "App\\GraphQL\\Mutations\\RemoveFromCart")
     @guard(with: ["sanctum"])
+
+  newOrder(
+    address: String! @rules(apply: ["required", "min:5"])
+    payment_method: PaymentMethod! @rules(apply: ["required"])
+    items: [OrderItemInput!]! @rules(apply: ["required", "min:1"])
+  ): Order
+    @field(resolver: "App\\GraphQL\\Mutations\\NewOrder")
+    @guard(with: ["sanctum"])
 }
 
 type User {
@@ -143,3 +151,37 @@ type CartItem {
   quantity: Int!
 }
 
+
+type Order {
+  id: ID!
+  user: User! @belongsTo
+  address: String!
+  status: String!
+  payment_method: String!
+  sub_total: Float!
+  tax: Float!
+  shipping: Float!
+  total: Float!
+  created_at: DateTime!
+  items: [OrderItem!]! @hasMany
+}
+
+type OrderItem {
+  id: ID!
+  order: Order! @belongsTo
+  product: Product! @belongsTo
+  quantity: Int!
+  price: Float!
+}
+
+input OrderItemInput {
+  product_id: ID!
+  quantity: Int!
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  MASTERCARD
+  VISA
+  PAYPAL
+}
