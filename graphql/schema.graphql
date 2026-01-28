@@ -80,6 +80,7 @@ type Mutation {
     price: Float! @rules(apply: ["required", "numeric", "min:0"])
     stock: Int! @rules(apply: ["required", "integer", "min:0"])
     image: Upload @rules(apply: ["image", "max:2048"])
+    description: String @rules(apply: ["required", "min:3"])
   ): Product!
     @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
     @guard(with: ["sanctum"])
@@ -149,6 +150,7 @@ type Product {
   price: Float!
   stock: Int!
   image: String @rename(attribute: "image_url")
+  description: String
   created_at: DateTime!
   updated_at: DateTime!
   user_id: ID
