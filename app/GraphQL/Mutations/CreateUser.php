@@ -12,6 +12,9 @@ final readonly class CreateUser
         // TODO implement the resolver
         $user = User::create($args);
 
+        $user->role_id = 2;
+        $user->save();
+
         return $user;
     }
 }
