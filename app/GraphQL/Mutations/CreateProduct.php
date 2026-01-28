@@ -26,6 +26,7 @@ final readonly class CreateProduct
             'stock' => $args['stock'], 
             'image_path' => $imagePath,
             'user_id' => Auth::user()->id,
+            'description' => $args['description'],
         ]);
     }
 }
