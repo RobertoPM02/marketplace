@@ -26,9 +26,19 @@ type Query {
   products: [Product!]! @all
 
   allProducts: [Product!]! @paginate(defaultCount: 10)
+    @guard(with: ["sanctum"])
 
   myCart: Cart
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
+    @guard(with: ["sanctum"])
+
+  allOrders: [Order!]! @all
+   @guard(with: ["sanctum"])
+
+  orderById(
+    id: ID @eq
+  ): Order
+    @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
 
 }
