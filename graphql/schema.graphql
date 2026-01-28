@@ -59,8 +59,6 @@ type Mutation {
     password: String!
       @hash
       @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
-    role_id: ID!
-      @rules(apply: ["exists:roles,id"])
   ): User
     @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
 
