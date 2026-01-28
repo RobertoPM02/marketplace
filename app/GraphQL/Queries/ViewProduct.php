@@ -3,6 +3,7 @@
 namespace App\GraphQL\Queries;
 
 use App\Models\Product;
+use Error;
 
 
 final readonly class ViewProduct
@@ -11,9 +12,10 @@ final readonly class ViewProduct
     public function __invoke(null $_, array $args)
     {
         // TODO implement the resolver
-
-        
-        return Product::find($args['id']);
-
+        $product = Product::find($args['id']);
+        if (!$product) {
+            throw new Error('Producto no encontrado');
+        }
+        return $product;
     }
 }
