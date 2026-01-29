@@ -10,6 +10,12 @@ scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload
 
 
 type Query {
+
+    me: User!
+        @guard(with: ["sanctum"])
+        @auth
+
+
     # --- Usuarios ---
     user(
         id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
