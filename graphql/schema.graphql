@@ -7,11 +7,7 @@ scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date
 
 scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
 
-#scalar JSON @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\JSON")
 
-# ---------------------------------------------------
-# QUERY ROOT
-# ---------------------------------------------------
 
 type Query {
     # --- Usuarios ---
@@ -24,27 +20,36 @@ type Query {
         name: String @where(operator: "like")
     ): [User!]! @paginate(defaultCount: 10)
 
-    # --- Productos ---
-    product(id: ID @eq): Product @find
+  viewProductsById(
+    id: ID @eq @rules(apply: ["required"])
+  ): Product
+    @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
+
+
+  product(id: ID @eq): Product @find
 
     products: [Product!]! @all
 
-    allProducts: [Product!]! @paginate(defaultCount: 10)
+  allProducts: [Product!]! @paginate(defaultCount: 10)
+    @guard(with: ["sanctum"])
 
-    viewProductsById(
-        id: ID @eq @rules(apply: ["required"])
-    ): Product @field(resolver: "App\\GraphQL\\Queries\\ViewProduct")
+  myProducts: [Product!]!
+    @field(resolver: "App\\GraphQL\\Queries\\MyProducts")
+    @guard(with: ["sanctum"])
 
-    # --- Carrito ---
-    myCart: Cart
-        @field(resolver: "App\\GraphQL\\Queries\\MyCart")
-        @guard(with: ["sanctum"])
+  myCart: Cart
+    @field(resolver: "App\\GraphQL\\Queries\\MyCart")
+    @guard(with: ["sanctum"])
 
-    # --- Perfil ---
-    # Query para obtener MI perfil (requiere login)
-    me: User!
-        @guard(with: ["sanctum"])
-        @auth
+  allOrders: [Order!]! @all
+   @guard(with: ["sanctum"])
+
+  orderById(
+    id: ID @eq
+  ): Order
+    @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
+    @guard(with: ["sanctum"])
+
 }
 
 # ---------------------------------------------------
@@ -52,14 +57,19 @@ type Query {
 # ---------------------------------------------------
 
 type Mutation {
-    # --- Auth & Registro ---
-    createUser(
-        name: String!
-        email: String! @rules(apply: ["email", "unique:users,email"])
-        number: String! @rename(attribute: "phone_number") @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
-        password: String! @hash @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
-        role_id: ID! @rules(apply: ["exists:roles,id"])
-    ): User @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
+  # REGISTRO
+  createUser(
+    name: String!
+    email: String!
+      @rules(apply: ["email", "unique:users,email"])
+    number: String!
+      @rename(attribute: "phone_number")
+      @rules(apply: ["min:10", "max:15", "unique:users,phone_number"])
+    password: String!
+      @hash
+      @rules(apply: ["required", "regex:/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/"])
+  ): User
+    @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
 
     login(
         login: String! @rules(apply: ["required"])
@@ -68,54 +78,62 @@ type Mutation {
 
     logout: Boolean! @field(resolver: "App\\GraphQL\\Mutations\\Logout")
 
+  # PRODUCTOS
+  createProduct(
+    name: String! @rules(apply: ["required", "min:3"])
+    price: Float! @rules(apply: ["required", "numeric", "min:0"])
+    stock: Int! @rules(apply: ["required", "integer", "min:0"])
+    image: Upload @rules(apply: ["image", "max:2048"])
+    description: String @rules(apply: ["required", "min:3"])
+  ): Product!
+    @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
+    @guard(with: ["sanctum"])
+    
+  deleteProduct(
+    id: ID!
+  ): Product
+    @field(resolver: "App\\GraphQL\\Mutations\\DeleteProduct")
+    @guard(with: ["sanctum"])
+
+
+  # CARRITO
+  addToCart(
+    product_id: ID!
+    quantity: Int = 1
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\AddToCart")
+    @guard(with: ["sanctum"])
+
+  updateCartItem(
+    cart_item_id: ID!
+    quantity: Int!
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\UpdateCartItem")
+    @guard(with: ["sanctum"])
+
+  removeFromCart(
+    cart_item_id: ID!
+  ): Cart
+    @field(resolver: "App\\GraphQL\\Mutations\\RemoveFromCart")
+    @guard(with: ["sanctum"])
+
+  newOrder(
+    address: String! @rules(apply: ["required", "min:5"])
+    payment_method: PaymentMethod! @rules(apply: ["required"])
+    items: [OrderItemInput!]! @rules(apply: ["required", "min:1"])
+  ): Order
+    @field(resolver: "App\\GraphQL\\Mutations\\NewOrder")
+    @guard(with: ["sanctum"])
+
     # --- Perfil de Usuario (NUEVO) ---
     updateProfile(
         name: String @rules(apply: ["min:3", "max:50"])
         phone_number: String @rules(apply: ["numeric", "digits_between:10,15"])
+        #email: String @rules(apply: ["email", "unique:users,email"])
     ): ProfileUpdateResponse!
         @field(resolver: "App\\GraphQL\\Mutations\\UpdateProfile")
         @guard(with: ["sanctum"])
-
-    # --- Productos ---
-    createProduct(
-        name: String! @rules(apply: ["required", "min:3"])
-        price: Float! @rules(apply: ["required", "numeric", "min:0"])
-        image: Upload @rules(apply: ["image", "max:2048"])
-    ): Product!
-        @field(resolver: "App\\GraphQL\\Mutations\\CreateProduct")
-        @guard(with: ["sanctum"])
-
-    # --- Carrito ---
-    addToCart(
-        product_id: ID!
-        quantity: Int = 1
-    ): Cart
-        @field(resolver: "App\\GraphQL\\Mutations\\AddToCart")
-        @guard(with: ["sanctum"])
-
-    updateCartItem(
-        cart_item_id: ID!
-        quantity: Int!
-    ): Cart
-        @field(resolver: "App\\GraphQL\\Mutations\\UpdateCartItem")
-        @guard(with: ["sanctum"])
-
-    removeFromCart(
-        cart_item_id: ID!
-    ): Cart
-        @field(resolver: "App\\GraphQL\\Mutations\\RemoveFromCart")
-        @guard(with: ["sanctum"])
-
-    # --- Checkout ---
-    checkout: CheckoutResponse!
-        @field(resolver: "App\\GraphQL\\Mutations\\Checkout")
-        @guard(with: ["sanctum"])
-
 }
-
-# ---------------------------------------------------
-# OBJECT TYPES
-# ---------------------------------------------------
 
 type User {
     id: ID!
@@ -143,23 +161,25 @@ type AuthPayload {
 }
 
 type Product {
-    id: ID!
-    name: String!
-    price: Float!
-    image: String @rename(attribute: "image_url")
-    created_at: DateTime!
-    updated_at: DateTime!
-    user_id: ID
-    user: User @belongsTo
+  id: ID!
+  name: String!
+  price: Float!
+  stock: Int!
+  image: String @rename(attribute: "image_url")
+  description: String
+  created_at: DateTime!
+  updated_at: DateTime!
+  user_id: ID
+  user: User @belongsTo
 }
 
 type Cart {
-    id: ID!
-    items: [CartItem!]! @hasMany
-    subtotal: Float!
-    shipping: Float!
-    taxes: Float!
-    total: Float!
+  id: ID!
+  items: [CartItem!]! @hasMany
+  subtotal: Float!
+  shipping: Float!
+  taxes: Float!
+  total: Float!
 }
 
 type CartItem {
@@ -168,16 +188,43 @@ type CartItem {
     quantity: Int!
 }
 
-type CheckoutResponse {
-    status: String!
-    message: String!
-    total_paid: Float!
+
+type Order {
+  id: ID!
+  user: User! @belongsTo
+  address: String!
+  status: String!
+  payment_method: String!
+  sub_total: Float!
+  tax: Float!
+  shipping: Float!
+  total: Float!
+  created_at: DateTime!
+  items: [OrderItem!]! @hasMany
 }
 
+type OrderItem {
+  id: ID!
+  order: Order! @belongsTo
+  product: Product! @belongsTo
+  quantity: Int!
+  price: Float!
+}
 
-# NUEVO: Respuesta para la actualización de perfil
 type ProfileUpdateResponse {
     status: String!
     message: String!
     user: User!
+}
+
+input OrderItemInput {
+  product_id: ID!
+  quantity: Int!
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  MASTERCARD
+  VISA
+  PAYPAL
 }

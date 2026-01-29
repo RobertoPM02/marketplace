@@ -2,20 +2,20 @@
 
 namespace App\GraphQL\Queries;
 
-use App\Models\Product;
+use App\Models\Order;
 use Error;
 
-
-final readonly class ViewProduct
+final readonly class OrderQuery
 {
     /** @param  array{}  $args */
     public function __invoke(null $_, array $args)
     {
         // TODO implement the resolver
-        $product = Product::find($args['id']);
-        if (!$product) {
-            throw new Error('Producto no encontrado');
+
+        $order = Order::find($args['id']);
+        if (!$order) {
+            throw new Error('Pedido no encontrado');
         }
-        return $product;
+        return $order;
     }
 }
