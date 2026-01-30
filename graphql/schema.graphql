@@ -51,7 +51,7 @@ type Query {
    @guard(with: ["sanctum"])
 
   orderById(
-    id: ID @eq
+    id: ID!
   ): Order
     @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
