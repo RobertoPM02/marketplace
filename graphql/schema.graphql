@@ -1,3 +1,7 @@
+# ---------------------------------------------------
+# SCALARS
+# ---------------------------------------------------
+
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
@@ -6,14 +10,21 @@ scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload
 
 
 type Query {
-  user(
-    id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
-    email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
-  ): User @find
 
-  users(
-    name: String @where(operator: "like")
-  ): [User!]! @paginate(defaultCount: 10)
+    me: User!
+        @guard(with: ["sanctum"])
+        @auth
+
+
+    # --- Usuarios ---
+    user(
+        id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+        email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
+    ): User @find
+
+    users(
+        name: String @where(operator: "like")
+    ): [User!]! @paginate(defaultCount: 10)
 
   viewProductsById(
     id: ID @eq @rules(apply: ["required"])
@@ -23,7 +34,7 @@ type Query {
 
   product(id: ID @eq): Product @find
 
-  products: [Product!]! @all
+    products: [Product!]! @all
 
   allProducts: [Product!]! @paginate(defaultCount: 10)
     @guard(with: ["sanctum"])
@@ -36,16 +47,21 @@ type Query {
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
     @guard(with: ["sanctum"])
 
-  allOrders: [Order!]! @all
-   @guard(with: ["sanctum"])
-
   orderById(
     id: ID!
   ): Order
     @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
 
+  myOrders: [Order!]!
+    @field(resolver: "App\\GraphQL\\Queries\\MyOrders")
+    @guard(with: ["sanctum"])
+
 }
+
+# ---------------------------------------------------
+# MUTATION ROOT
+# ---------------------------------------------------
 
 type Mutation {
   # REGISTRO
@@ -62,17 +78,12 @@ type Mutation {
   ): User
     @field(resolver: "App\\GraphQL\\Mutations\\CreateUser")
 
-  # AUTH
-  login(
-    login: String!
-      @rules(apply: ["required"])
-    password: String!
-      @rules(apply: ["required", "min:8"])
-  ): AuthPayload
-    @field(resolver: "App\\GraphQL\\Mutations\\Login")
+    login(
+        login: String! @rules(apply: ["required"])
+        password: String! @rules(apply: ["required", "min:8"])
+    ): AuthPayload @field(resolver: "App\\GraphQL\\Mutations\\Login")
 
-  logout: Boolean!
-    @field(resolver: "App\\GraphQL\\Mutations\\Logout")
+    logout: Boolean! @field(resolver: "App\\GraphQL\\Mutations\\Logout")
 
   # PRODUCTOS
   createProduct(
@@ -120,28 +131,40 @@ type Mutation {
   ): Order
     @field(resolver: "App\\GraphQL\\Mutations\\NewOrder")
     @guard(with: ["sanctum"])
+
+    # --- Perfil de Usuario (NUEVO) ---
+    updateProfile(
+        name: String @rules(apply: ["min:3", "max:50"])
+        phone_number: String @rules(apply: ["numeric", "digits_between:10,15"])
+        #email: String @rules(apply: ["email", "unique:users,email"])
+    ): ProfileUpdateResponse!
+        @field(resolver: "App\\GraphQL\\Mutations\\UpdateProfile")
+        @guard(with: ["sanctum"])
 }
 
 type User {
-  id: ID!
-  name: String!
-  email: String!
-  number: String! @rename(attribute: "phone_number")
-  email_verified_at: DateTime
-  created_at: DateTime!
-  updated_at: DateTime!
-  role: Role @belongsTo
+    id: ID!
+    name: String!
+    email: String!
+    number: String! @rename(attribute: "phone_number")
+    email_verified_at: DateTime
+    created_at: DateTime!
+    updated_at: DateTime!
+    role: Role @belongsTo
+    
+    # NUEVO: Para ver mis ventas (productos publicados)
+    products: [Product!]! @hasMany
 }
 
 type Role {
-  id: ID!
-  name: String!
+    id: ID!
+    name: String!
 }
 
 type AuthPayload {
-  access_token: String!
-  token_type: String!
-  user: User!
+    access_token: String!
+    token_type: String!
+    user: User!
 }
 
 type Product {
@@ -167,9 +190,9 @@ type Cart {
 }
 
 type CartItem {
-  id: ID!
-  product: Product!
-  quantity: Int!
+    id: ID!
+    product: Product!
+    quantity: Int!
 }
 
 
@@ -193,6 +216,12 @@ type OrderItem {
   product: Product! @belongsTo
   quantity: Int!
   price: Float!
+}
+
+type ProfileUpdateResponse {
+    status: String!
+    message: String!
+    user: User!
 }
 
 input OrderItemInput {
