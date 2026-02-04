@@ -56,6 +56,10 @@ type Query {
     @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
 
+    myNotifications: [Notification!]!
+        @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
+        @guard(with: ["sanctum"])
+
 }
 
 # ---------------------------------------------------
@@ -139,6 +143,10 @@ type Mutation {
     ): ProfileUpdateResponse!
         @field(resolver: "App\\GraphQL\\Mutations\\UpdateProfile")
         @guard(with: ["sanctum"])
+
+        markAsRead(id: ID!): Boolean
+        @field(resolver: "App\\GraphQL\\Mutations\\MarkAsRead")
+        @guard(with: ["sanctum"])
 }
 
 type User {
@@ -221,6 +229,13 @@ type ProfileUpdateResponse {
     status: String!
     message: String!
     user: User!
+}
+
+type Notification {
+    id: ID!
+    data: JSON!     
+    read_at: DateTime
+    created_at: DateTime!
 }
 
 input OrderItemInput {
