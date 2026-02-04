@@ -231,12 +231,12 @@ type ProfileUpdateResponse {
     user: User!
 }
 
-type Notification {
-    id: ID!
-    data: JSON!     
-    read_at: DateTime
-    created_at: DateTime!
-}
+#type Notification {
+ #   id: ID!
+  #   data: JSON!     
+   # read_at: DateTime
+    #created_at: DateTime!
+#}
 
 input OrderItemInput {
   product_id: ID!
