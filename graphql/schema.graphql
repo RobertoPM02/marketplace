@@ -47,18 +47,20 @@ type Query {
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
     @guard(with: ["sanctum"])
 
-  allOrders: [Order!]! @all
-   @guard(with: ["sanctum"])
-
   orderById(
     id: ID!
   ): Order
     @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
 
-    myNotifications: [Notification!]!
+
+  myNotifications: [Notification!]!
         @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
         @guard(with: ["sanctum"])
+        
+  myOrders: [Order!]!
+    @field(resolver: "App\\GraphQL\\Queries\\MyOrders")
+    @guard(with: ["sanctum"])
 
 }
 
