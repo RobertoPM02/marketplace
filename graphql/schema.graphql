@@ -54,9 +54,9 @@ type Query {
     @guard(with: ["sanctum"])
 
 
-  myNotifications: [Notification!]!
-        @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
-        @guard(with: ["sanctum"])
+  #myNotifications: [Notification!]!
+   #     @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
+    #    @guard(with: ["sanctum"])
         
   myOrders: [Order!]!
     @field(resolver: "App\\GraphQL\\Queries\\MyOrders")
@@ -146,9 +146,9 @@ type Mutation {
         @field(resolver: "App\\GraphQL\\Mutations\\UpdateProfile")
         @guard(with: ["sanctum"])
 
-        markAsRead(id: ID!): Boolean
-        @field(resolver: "App\\GraphQL\\Mutations\\MarkAsRead")
-        @guard(with: ["sanctum"])
+    #markAsRead(id: ID!): Boolean
+    #    @field(resolver: "App\\GraphQL\\Mutations\\MarkAsRead")
+    #    @guard(with: ["sanctum"])
 }
 
 type User {
