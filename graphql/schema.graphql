@@ -231,9 +231,19 @@ type ProfileUpdateResponse {
     user: User!
 }
 
+type NotificationData {
+    title: String
+    message: String
+    product_id: ID
+    image_url: String
+    total_earned: Float
+    date: String
+}
+
+
 type Notification {
     id: ID!
-    data: JSON!     
+    data: NotificationData!
     read_at: DateTime
     created_at: DateTime!
 }
