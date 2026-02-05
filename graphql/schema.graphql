@@ -7,8 +7,6 @@ scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date
 
 scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
 
-
-
 type Query {
 
     me: User!
@@ -47,18 +45,20 @@ type Query {
     @field(resolver: "App\\GraphQL\\Queries\\MyCart")
     @guard(with: ["sanctum"])
 
-  allOrders: [Order!]! @all
-   @guard(with: ["sanctum"])
-
   orderById(
-    id: ID @eq
+    id: ID!
   ): Order
     @field(resolver: "App\\GraphQL\\Queries\\OrderQuery")
     @guard(with: ["sanctum"])
 
-    myNotifications: [Notification!]!
-        @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
-        @guard(with: ["sanctum"])
+
+  #myNotifications: [Notification!]!
+   #     @field(resolver: "App\\GraphQL\\Queries\\MyNotifications")
+    #    @guard(with: ["sanctum"])
+        
+  myOrders: [Order!]!
+    @field(resolver: "App\\GraphQL\\Queries\\MyOrders")
+    @guard(with: ["sanctum"])
 
 }
 
@@ -144,9 +144,9 @@ type Mutation {
         @field(resolver: "App\\GraphQL\\Mutations\\UpdateProfile")
         @guard(with: ["sanctum"])
 
-        markAsRead(id: ID!): Boolean
-        @field(resolver: "App\\GraphQL\\Mutations\\MarkAsRead")
-        @guard(with: ["sanctum"])
+    #markAsRead(id: ID!): Boolean
+    #    @field(resolver: "App\\GraphQL\\Mutations\\MarkAsRead")
+    #    @guard(with: ["sanctum"])
 }
 
 type User {
